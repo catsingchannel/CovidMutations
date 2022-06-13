@@ -26,10 +26,15 @@
 #' nucmer<-nucmer[!nucmer$qvar%in%c("B","D","H","K","M","N","R","S","V","W","Y"),]
 #' nucmer<- mergeEvents(nucmer = nucmer)## This will update the nucmer object
 mergeEvents <- function(nucmer = nucmer){
+  my_cluster <- parallel::makeCluster(parallel::detectCores() - 1, type = "PSOCK")
+  doParallel::registerDoParallel(cl = my_cluster)
+  foreach::getDoParRegistered()
+  
   samples<-unique(nucmer$qname)
   #length(samples) # 12822
   #pb<-txtProgressBar(0,length(samples),style=3)
-  for (pbi in seq_along(samples)){ # This will update the nucmer object
+  #for (pbi in seq_along(samples)){  This will update the nucmer object
+  foreach(pbi = seq_along(samples)) %dopar% {
     sample<-samples[pbi]
     allvars<-nucmer[nucmer$qname==sample,]
     snps<-allvars[(allvars[,"rvar"]!=".")&(allvars[,"qvar"]!="."),]
